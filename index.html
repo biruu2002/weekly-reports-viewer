@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>게임사업실 주간업무 보고서 (클래식 · 이모지 마일스톤 · Fix)</title>
+<title>주간업무 보고 (읽기 전용 · AutoConfig)</title>
 <style>
   :root{--bg:#f3f5f9; --ink:#0b1220; --muted:#62708a; --card:#ffffff; --line:#e3e8f2; --primary:#275efe}
   *{box-sizing:border-box}
@@ -51,8 +51,13 @@
     <div class="sub">보고 기간: <span id="period">-</span></div>
 
     <div class="toolbar">
-      <div class="row"><button class="btn" id="viewBtn">보고서 보기</button></div>
-      <div class="row"><select id="dateSelect" class="select"></select><button class="btn" id="cfgBtn">설정</button></div>
+      <div class="row">
+        <button class="btn" id="viewBtn">보고서 보기</button>
+      </div>
+      <div class="row">
+        <select id="dateSelect" class="select"></select>
+        <button class="btn" id="cfgBtn">설정</button>
+      </div>
     </div>
 
     <h3 class="section-title">종합 현황</h3>
@@ -111,16 +116,37 @@
   const debug=(m)=>{ const d=$("#debug"); d.textContent += m + "\n"; }
   const setStatus=(t,cls)=>{ const s=$("#status"); s.textContent=t; s.className="status "+(cls||""); }
 
-  function loadCfg(){ try{return JSON.parse(localStorage.getItem("firebaseCfg")||"{}")}catch{return{}} }
+  function loadCfgFromCache(){ 
+    try{
+      const cached = JSON.parse(localStorage.getItem("firebaseCfg")||"{}");
+      if(cached.apiKey && cached.authDomain && cached.projectId && cached.appId) return cached;
+    }catch{}
+    return null;
+  }
   function saveCfg(cfg){ localStorage.setItem("firebaseCfg", JSON.stringify(cfg)); }
 
+  async function loadAutoConfig(){
+    const usp = new URLSearchParams(location.search);
+    if(usp.has("cfg")){
+      try{
+        const cfg = JSON.parse(atob(usp.get("cfg")));
+        if(cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId) return cfg;
+      }catch{}
+    }
+    try{
+      const resp = await fetch("./firebase-config.json", {cache:"no-store"});
+      if(resp.ok){
+        const cfg = await resp.json();
+        if(cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId) return cfg;
+      }
+    }catch{}
+    const cached = loadCfgFromCache();
+    if(cached) return cached;
+    return null;
+  }
+
   const dlg=$("#cfgDialog");
-  $("#cfgBtn").addEventListener("click", ()=>{
-    const c=loadCfg();
-    $("#apiKey").value=c.apiKey||""; $("#authDomain").value=c.authDomain||"";
-    $("#projectId").value=c.projectId||""; $("#appId").value=c.appId||"";
-    dlg.showModal();
-  });
+  $("#cfgBtn").addEventListener("click", ()=>{dlg.showModal();});
   $("#cfgClose").addEventListener("click", ()=>dlg.close());
   $("#cfgSave").addEventListener("click", ()=>{
     const cfg={ apiKey:$("#apiKey").value.trim(), authDomain:$("#authDomain").value.trim(), projectId:$("#projectId").value.trim(), appId:$("#appId").value.trim() };
@@ -167,8 +193,13 @@
   }
 
   async function main(){
-    const cfg=loadCfg();
-    if(!cfg.apiKey){ setStatus("설정 필요 — 우측 상단 [설정] 클릭","err"); return; }
+    let cfg = await loadAutoConfig();
+    if(!cfg){
+      setStatus("자동 설정을 찾지 못했습니다 — repo에 firebase-config.json 추가 또는 ?cfg= 파라미터 사용, 또는 [설정]에서 직접 입력하세요.","err");
+      return;
+    }
+    saveCfg(cfg);
+
     let app;
     try{
       app=getApps().length?getApp():initializeApp(cfg);
