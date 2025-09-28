@@ -1,307 +1,253 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>주간업무 보고 — 읽기 전용(자동 탐색 · 고장난 경우 진단)</title>
-  <style>
-    :root{--bg:#0b1020;--card:#12183a;--line:#26326b;--ink:#e8ebff;--muted:#9fb0ff}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:24px}
-    .wrap{max-width:1100px;margin:0 auto}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);margin-bottom:16px}
-    .hd{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .bd{padding:20px}
-    .flex{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    select,input,button{background:#0e1330;border:1px solid #2a3772;color:#cfe2ff;border-radius:10px;padding:10px 12px}
-    button{cursor:pointer;font-weight:600}
-    .muted{color:var(--muted)}
-    .ok{color:#7af57a;font-weight:700}
-    .warn{color:#ffd56a;font-weight:700}
-    .err{color:#ff8383;font-weight:700}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .section{border:1px dashed var(--line);border-radius:12px;padding:12px}
-    h1{font-size:20px;margin:0}
-    h2{font-size:16px;margin:0 0 8px 0}
-    ul{margin:6px 0 0 18px}
-    .small{font-size:12px}
-    code,pre{background:#0e1330;border:1px solid #2a3772;color:#cfe2ff;border-radius:10px;padding:12px;display:block;overflow:auto}
-    .badge{border:1px solid var(--line);border-radius:999px;padding:2px 8px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>게임사업실 주간업무 보고서 (클래식 · 이모지 마일스톤 · Fix)</title>
+<style>
+  :root{--bg:#f3f5f9; --ink:#0b1220; --muted:#62708a; --card:#ffffff; --line:#e3e8f2; --primary:#275efe}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  h1{font-size:22px;margin:0 0 4px 0}
+  .sub{font-size:12px;color:var(--muted)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .btn{appearance:none;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-weight:600}
+  .select{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,.06)}
+  .card .hd{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:700}
+  .card .bd{padding:14px 16px}
+  ul{margin:0;padding:0 0 0 18px}
+  .section-title{font-weight:800;margin:18px 0 10px}
+  .bar{height:15px;border-radius:999px;background:#e8eefc;position:relative;overflow:hidden}
+  .bar > i{display:block;height:100%;background:#cfe0ff;border-radius:999px;position:relative}
+  .bar > i > span{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:#0b1220;opacity:.85}
+  .row{display:flex;gap:12px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;color:#475569}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);padding:0 16px;margin-top:-6px}
+  .tab{padding:10px 12px;border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;background:#f7f9ff;cursor:pointer;font-weight:700;color:#334155}
+  .tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .muted{color:var(--muted)}
+  .status{font-weight:700}
+  .status.ok{color:#16a34a}
+  .status.warn{color:#f59e0b}
+  .status.err{color:#ef4444}
+  .footer{color:var(--muted);font-size:12px;margin-top:10px}
+  .debug{white-space:pre-wrap;font-size:12px;color:#6b7280}
+  .milestones{margin-top:10px;padding-left:0}
+  .milestones li{list-style:none;margin:6px 0;display:flex;gap:8px;align-items:flex-start;color:#334155}
+  .milestones .emoji{width:18px;text-align:center;opacity:.9}
+  .meta{font-size:12px;color:#64748b}
+  .leftbar{border-left:6px solid transparent;border-radius:8px}
+  .leftbar.completed{border-left-color:#16a34a}
+  .leftbar.planned{border-left-color:#275efe}
+  .leftbar.issues{border-left-color:#f59e0b}
+</style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="hd">
-        <h1>주간업무 보고 — 읽기 전용</h1>
-        <div class="muted small">컬렉션그룹/루트 자동 탐색 • 인덱스 문제 감지 • 클라이언트 정렬</div>
-      </div>
-      <div class="bd">
-        <div class="flex">
-          <div>상태: <span id="status" class="warn">초기화 대기…</span></div>
-          <div id="found" class="badge muted small">0건</div>
-        </div>
-        <div class="flex" style="margin-top:12px">
-          <label class="small">보고서 선택</label>
-          <select id="reportSelect" style="min-width:420px">
-            <option value="">(로딩 중…)</option>
-          </select>
-          <button id="reloadBtn">다시 불러오기</button>
-        </div>
-        <div id="hint" class="muted small" style="margin-top:8px"></div>
-      </div>
+    <h1>게임사업실 주간업무 보고서</h1>
+    <div class="sub">보고 기간: <span id="period">-</span></div>
+
+    <div class="toolbar">
+      <div class="row"><button class="btn" id="viewBtn">보고서 보기</button></div>
+      <div class="row"><select id="dateSelect" class="select"></select><button class="btn" id="cfgBtn">설정</button></div>
     </div>
 
+    <h3 class="section-title">종합 현황</h3>
+    <div class="grid3">
+      <div class="card"><div class="hd" style="color:#1e3a8a">이번 주 주요 성과</div><div class="bd"><ul id="achievements"></ul></div></div>
+      <div class="card"><div class="hd" style="color:#b91c1c">핵심 이슈 및 의사결정 필요</div><div class="bd"><ul id="issues"></ul></div></div>
+      <div class="card"><div class="hd" style="color:#166534">다음 주 주요 목표</div><div class="bd"><ul id="goals"></ul></div></div>
+    </div>
+
+    <h3 class="section-title">주요 프로젝트 및 마일스톤 현황</h3>
+    <div id="projects" class="col"></div>
+
+    <h3 class="section-title">팀별 상세 현황</h3>
     <div class="card">
-      <div class="hd"><h2>요약</h2><div id="weekRange" class="muted small"></div></div>
-      <div class="bd grid">
-        <div class="section">
-          <h3>성과</h3>
-          <ul id="achievements"></ul>
-        </div>
-        <div class="section">
-          <h3>이슈</h3>
-          <ul id="issues"></ul>
-        </div>
-        <div class="section">
-          <h3>다음주 목표</h3>
-          <ul id="goals"></ul>
-        </div>
-        <div class="section">
-          <h3>프로젝트</h3>
-          <ul id="projects"></ul>
+      <div class="tabs">
+        <div class="tab active" data-team="dev">개발팀</div>
+        <div class="tab" data-team="pub">퍼블리싱팀</div>
+        <div class="tab" data-team="qa">QA팀</div>
+      </div>
+      <div class="bd" id="teamPane">
+        <div class="grid3">
+          <div class="card leftbar completed"><div class="hd">완료 업무</div><div class="bd"><ul id="team-completed"></ul></div></div>
+          <div class="card leftbar planned"><div class="hd">진행 예정 업무</div><div class="bd"><ul id="team-planned"></ul></div></div>
+          <div class="card leftbar issues"><div class="hd">특이사항</div><div class="bd"><ul id="team-issues"></ul></div></div>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="hd"><h2>팀별</h2></div>
-      <div class="bd grid">
-        <div class="section">
-          <h3>개발</h3>
-          <ul id="team-dev"></ul>
-        </div>
-        <div class="section">
-          <h3>퍼블리싱</h3>
-          <ul id="team-pub"></ul>
-        </div>
-        <div class="section">
-          <h3>QA</h3>
-          <ul id="team-qa"></ul>
-        </div>
-        <div class="section">
-          <h3>원본 데이터</h3>
-          <pre id="raw"></pre>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="hd"><h2>디버그</h2></div>
-      <div class="bd">
-        <div class="grid">
-          <div class="section">
-            <h3>현재 앱 옵션</h3>
-            <pre id="appOptions">(없음)</pre>
-          </div>
-          <div class="section">
-            <h3>로그</h3>
-            <div id="log" class="small"></div>
-          </div>
-          <div class="section">
-            <h3>경로 힌트</h3>
-            <pre id="pathHints">(없음)</pre>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="footer"><span class="status" id="status">초기화 대기…</span></div>
+    <details style="margin-top:8px"><summary class="muted">디버그 보기</summary><div class="debug" id="debug"></div></details>
   </div>
 
-  <script type="module">
-    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import { getFirestore, collectionGroup, collection, getDocs, query, orderBy, limit, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  <dialog id="cfgDialog" style="border:none;padding:0;max-width:560px;border-radius:14px;overflow:hidden">
+    <div style="background:#fff;border:1px solid var(--line)">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800">Firebase 설정</div>
+      <div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input id="apiKey" placeholder="apiKey (AIza…)"/>
+        <input id="authDomain" placeholder="authDomain (your-project.firebaseapp.com)"/>
+        <input id="projectId" placeholder="projectId (your-project)"/>
+        <input id="appId" placeholder="appId (1:...:web:...)"/>
+      </div>
+      <div style="padding:12px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line)">
+        <button class="btn" id="cfgClose">닫기</button>
+        <button class="btn" id="cfgSave" style="background:var(--primary);color:#fff;border-color:var(--primary)">저장</button>
+      </div>
+    </div>
+  </dialog>
 
-    const $ = (s)=>document.querySelector(s);
-    const $ul = (id)=>document.getElementById(id);
-    const log = (m, cls="")=>{ const p=document.createElement("div"); if(cls) p.className=cls; p.textContent=m; $("#log").appendChild(p); };
-    const setFound = n => $("#found").textContent = n + "건";
+<script type="module">
+  import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getFirestore, collectionGroup, collection, getDocs, query, orderBy, limit, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // 1) firebaseConfig 값 채우기
-    const firebaseConfig = {
-      apiKey: "AIzaSyAAZ-D-Mxmt1uQ7W6223HTFr5IflAZAU2k",         // 콘솔에서 복사
-      authDomain: "donald-b4df1.firebaseapp.com",     // 콘솔에서 복사
-      projectId: "donald-b4df1",      // 콘솔에서 복사
-      appId: "1:231861185650:web:2079dd7290445ca4f2a6eb"           // 콘솔에서 복사
-    };
+  const $ = (s)=>document.querySelector(s);
+  const add = (el, txt)=>{ const li=document.createElement("li"); li.textContent=String(txt); el.appendChild(li); }
+  const clear=(el)=>{ while(el.firstChild) el.removeChild(el.firstChild); }
+  const debug=(m)=>{ const d=$("#debug"); d.textContent += m + "\n"; }
+  const setStatus=(t,cls)=>{ const s=$("#status"); s.textContent=t; s.className="status "+(cls||""); }
 
-    function computeWeekRange(dateStr){
-      if(!dateStr) return "";
-      const d = new Date(dateStr);
-      const day = (d.getDay()+6)%7;
-      const start = new Date(d); start.setDate(d.getDate()-day);
-      const end = new Date(start); end.setDate(start.getDate()+6);
-      const fmt = s => s.toISOString().slice(0,10);
-      return `${fmt(start)} ~ ${fmt(end)}`;
-    }
-    function clearList(el){ while(el.firstChild) el.removeChild(el.firstChild); }
-    function renderListSafe(el, arr){
-      clearList(el);
-      (arr||[]).forEach(t=>{ const li=document.createElement("li"); li.textContent = String(t); el.appendChild(li); });
-    }
-    function renderProjects(el, arr){
-      clearList(el);
-      (arr||[]).forEach(p=>{
-        const li = document.createElement("li");
-        const name = (p && p.name) ? String(p.name) : "무제";
-        const progress = (p && typeof p.progress==="number") ? Math.max(0, Math.min(100, Math.round(p.progress))) : 0;
-        li.textContent = `${name} — ${progress}%`;
-        el.appendChild(li);
-      });
-    }
-    function normalizeDate(v){
-      // Firestore Timestamp -> ISO, or keep string
-      if(!v) return null;
-      if(typeof v.toDate === "function"){ return v.toDate().toISOString().slice(0,10); }
-      if(typeof v === "string"){ return v; }
-      return null;
-    }
+  function loadCfg(){ try{return JSON.parse(localStorage.getItem("firebaseCfg")||"{}")}catch{return{}} }
+  function saveCfg(cfg){ localStorage.setItem("firebaseCfg", JSON.stringify(cfg)); }
 
-    async function main(){
-      try{
-        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-        $("#status").textContent = "앱 초기화 완료. 연결 시도 중…";
-        $("#status").className = "warn";
-        $("#appOptions").textContent = JSON.stringify(app.options, null, 2);
+  const dlg=$("#cfgDialog");
+  $("#cfgBtn").addEventListener("click", ()=>{
+    const c=loadCfg();
+    $("#apiKey").value=c.apiKey||""; $("#authDomain").value=c.authDomain||"";
+    $("#projectId").value=c.projectId||""; $("#appId").value=c.appId||"";
+    dlg.showModal();
+  });
+  $("#cfgClose").addEventListener("click", ()=>dlg.close());
+  $("#cfgSave").addEventListener("click", ()=>{
+    const cfg={ apiKey:$("#apiKey").value.trim(), authDomain:$("#authDomain").value.trim(), projectId:$("#projectId").value.trim(), appId:$("#appId").value.trim() };
+    if(!cfg.apiKey||!cfg.authDomain||!cfg.projectId||!cfg.appId){ alert("4개 값을 모두 입력하세요"); return; }
+    saveCfg(cfg); dlg.close(); location.reload();
+  });
 
-        try{
-          await signInAnonymously(getAuth(app));
-          log("익명 로그인 성공", "ok");
-        }catch(e){
-          log("익명 로그인 실패: " + (e.code||e.message), "warn");
-        }
+  function computePeriod(dateStr){
+    if(!dateStr) return "-";
+    const d=new Date(dateStr); const day=(d.getDay()+6)%7;
+    const s=new Date(d); s.setDate(d.getDate()-day);
+    const e=new Date(s); e.setDate(s.getDate()+6);
+    const f=x=>x.toISOString().slice(0,10);
+    return f(s)+" ~ "+f(e);
+  }
+  function normalizeDate(v){
+    if(!v) return null;
+    if(typeof v.toDate==="function") return v.toDate().toISOString().slice(0,10);
+    if(typeof v==="string") return v;
+    return null;
+  }
 
-        const db = getFirestore(app);
-        await loadRecentList(db);
-        $("#reloadBtn").addEventListener("click", ()=>loadRecentList(db));
-        $("#reportSelect").addEventListener("change", ()=>loadSelected(db));
-      }catch(e){
-        $("#status").textContent = "Firebase 초기화 오류";
-        $("#status").className = "err";
-        log("[init] " + (e.code||e.message), "err");
-      }
-    }
+  function emojiFor(status, done){
+    const t=(status||"").trim();
+    if(done===true || t==="완료") return "✅";
+    if(t==="진행중"||t==="진행 중") return "⏳";
+    return "🗓️";
+  }
+  function renderMilestones(container, milestones){
+    if(!Array.isArray(milestones) || milestones.length===0) return;
+    milestones.sort((a,b)=> String(a.date||a.when||"").localeCompare(String(b.date||b.when||"")));
+    const ul=document.createElement("ul"); ul.className="milestones";
+    milestones.forEach(m=>{
+      const li=document.createElement("li");
+      const em=document.createElement("span"); em.className="emoji"; em.textContent=emojiFor(m.status, m.done);
+      const block=document.createElement("div");
+      const meta=document.createElement("div"); meta.className="meta"; meta.textContent=String(m.date||m.when||"");
+      const lbl=document.createElement("div"); lbl.textContent=String(m.title||m.label||m.text||"");
+      block.appendChild(meta); block.appendChild(lbl);
+      li.appendChild(em); li.appendChild(block);
+      ul.appendChild(li);
+    });
+    container.appendChild(ul);
+  }
 
-    async function loadRecentList(db){
-      $("#status").textContent = "목록 불러오는 중…";
-      $("#status").className = "warn";
-      $("#hint").textContent = "";
-      $("#pathHints").textContent = "(없음)";
+  async function main(){
+    const cfg=loadCfg();
+    if(!cfg.apiKey){ setStatus("설정 필요 — 우측 상단 [설정] 클릭","err"); return; }
+    let app;
+    try{
+      app=getApps().length?getApp():initializeApp(cfg);
+      setStatus("앱 초기화 완료. 데이터 로딩…","warn");
+    }catch(e){ setStatus("초기화 오류: "+(e.code||e.message),"err"); return; }
 
-      let docs = [];
-      let hints = [];
+    const db=getFirestore(app);
+    await loadList(db);
+    $("#dateSelect").addEventListener("change", ()=>loadSelected(db));
+    $("#viewBtn").addEventListener("click", ()=>loadSelected(db));
+  }
 
-      // Method A: collectionGroup + orderBy(date desc)
-      try{
-        const q1 = query(collectionGroup(db, "weekly_reports"), orderBy("date","desc"), limit(200));
-        const s1 = await getDocs(q1);
-        docs = s1.docs.slice();
-        hints.push(`[A] collectionGroup weekly_reports + orderBy(date) → ${s1.size}건`);
-      }catch(e){
-        log("[A] " + (e.code||e.message), "warn");
-        if((e.code||"").includes("failed-precondition")){
-          $("#hint").innerHTML = "인덱스 필요: 콘솔 로그의 링크를 눌러 인덱스를 생성하세요.";
-        }
-      }
+  async function loadList(db){
+    let docs=[]; let notes=[];
+    try{ const s1=await getDocs(query(collectionGroup(db,"weekly_reports"), orderBy("date","desc"), limit(200))); docs=s1.docs.slice(); notes.push("A:OK"); }catch(e){ notes.push("A:"+e.code); }
+    if(docs.length===0){ try{ const s2=await getDocs(collectionGroup(db,"weekly_reports")); docs=s2.docs.slice(); notes.push("B:OK"); }catch(e){ notes.push("B:"+e.code); } }
+    if(docs.length===0){ try{ const s3=await getDocs(collection(db,"weekly_reports")); docs=s3.docs.slice(); notes.push("C:OK"); }catch(e){ notes.push("C:"+e.code); } }
+    debug("try="+notes.join(", "));
+    if(docs.length===0){ setStatus("연결 성공(데이터 0건) — 경로/규칙 확인","err"); return; }
 
-      // Fallback B: collectionGroup without orderBy (no index required), then client-side sort
-      if(docs.length === 0){
-        try{
-          const s2 = await getDocs(collectionGroup(db, "weekly_reports"));
-          docs = s2.docs.slice();
-          hints.push(`[B] collectionGroup weekly_reports (무정렬) → ${s2.size}건`);
-        }catch(e){
-          log("[B] " + (e.code||e.message), "warn");
-        }
-      }
+    docs.sort((a,b)=>{ const da=normalizeDate(a.data().date)||""; const dbv=normalizeDate(b.data().date)||""; return dbv.localeCompare(da); });
+    const sel=$("#dateSelect"); sel.innerHTML="";
+    docs.forEach(d=>{
+      const data=d.data(); const date=normalizeDate(data.date)||"(날짜없음)";
+      const opt=document.createElement("option"); opt.value=d.ref.path; opt.textContent=date; sel.appendChild(opt);
+    });
+    await loadSelected(db);
+  }
 
-      // Fallback C: 루트 컬렉션 'weekly_reports' (옛 경로 호환)
-      if(docs.length === 0){
-        try{
-          const s3 = await getDocs(collection(db, "weekly_reports"));
-          docs = s3.docs.slice();
-          hints.push(`[C] root weekly_reports → ${s3.size}건`);
-        }catch(e){
-          log("[C] " + (e.code||e.message), "warn");
-        }
-      }
+  async function loadSelected(db){
+    const path=$("#dateSelect").value;
+    if(!path) return;
+    try{
+      const snap=await getDoc(doc(db, path)); if(!snap.exists()) return;
+      const data=snap.data(); const date=normalizeDate(data.date);
+      $("#period").textContent=computePeriod(date);
 
-      // nothing found
-      if(docs.length === 0){
-        setFound(0);
-        $("#status").textContent = "연결 성공(데이터 0건) — 컬렉션/경로/규칙을 확인하세요";
-        $("#status").className = "err";
-        $("#pathHints").textContent = hints.join("\n");
-        return;
-      }
+      const ach=$("#achievements"), iss=$("#issues"), go=$("#goals");
+      [ach,iss,go].forEach(clear);
+      (data.summary?.achievements||[]).forEach(x=>add(ach,x));
+      (data.summary?.issues||[]).forEach(x=>add(iss,x));
+      (data.summary?.goals||[]).forEach(x=>add(go,x));
 
-      // Client-side sort by date desc (normalized)
-      docs.sort((a,b)=>{
-        const da = normalizeDate(a.data().date) || "";
-        const dbv = normalizeDate(b.data().date) || "";
-        return dbv.localeCompare(da);
-      });
-
-      const sel = $("#reportSelect");
-      sel.innerHTML = "";
-      docs.forEach(d=>{
-        const data = d.data();
-        const date = normalizeDate(data.date) || "(날짜없음)";
-        const title = (data.summary && data.summary.title) || (data.projects && data.projects[0] && data.projects[0].name) || "무제";
-        const opt = document.createElement("option");
-        opt.value = d.ref.path; // 전체 문서 경로
-        opt.textContent = `${date} · ${title}  —  ${d.ref.path}`;
-        sel.appendChild(opt);
+      const host=$("#projects"); host.innerHTML="";
+      (data.projects||[]).forEach(p=>{
+        const prog=Math.max(0,Math.min(100,Math.round(p.progress||0)));
+        const box=document.createElement("div"); box.className="card"; box.style.marginBottom="12px";
+        box.innerHTML=`<div class="bd">
+            <div class="row" style="justify-content:space-between;">
+              <div style="font-weight:800">${(p.name||"무제")}</div>
+              <span class="pill">${prog}%</span>
+            </div>
+            <div class="bar" style="margin-top:8px;">
+              <i style="width:${prog}%"><span>${prog}%</span></i>
+            </div>
+          </div>`;
+        host.appendChild(box);
+        const bd = box.querySelector(".bd");
+        renderMilestones(bd, Array.isArray(p.milestones)? p.milestones: []);
       });
 
-      setFound(docs.length);
-      $("#status").textContent = "연결 성공 (읽기 전용)";
-      $("#status").className = "ok";
-      $("#pathHints").textContent = hints.join("\n");
-
-      if(sel.options.length){ await loadSelected(db); }
-    }
-
-    async function loadSelected(db){
-      const sel = $("#reportSelect");
-      const path = sel.value;
-      if(!path) return;
-      try{
-        const d = await getDoc(doc(db, path));
-        if(!d.exists()){ log("문서 없음", "warn"); return; }
-        const data = d.data();
-
-        const iso = normalizeDate(data.date);
-        $("#weekRange").textContent = iso ? `보고 기간: ${computeWeekRange(iso)}` : "";
-
-        renderListSafe($ul("achievements"), data.summary?.achievements);
-        renderListSafe($ul("issues"), data.summary?.issues);
-        renderListSafe($ul("goals"), data.summary?.goals);
-        renderProjects($ul("projects"), data.projects);
-
-        const dev = [].concat(data.teams?.dev?.completed||[], (data.teams?.dev?.planned||[]).map(x=>"[다음] "+x));
-        const pub = [].concat(data.teams?.pub?.completed||[], (data.teams?.pub?.planned||[]).map(x=>"[다음] "+x));
-        const qa  = [].concat(data.teams?.qa?.completed||[],  (data.teams?.qa?.planned||[]).map(x=>"[다음] "+x));
-        renderListSafe($ul("team-dev"), dev);
-        renderListSafe($ul("team-pub"), pub);
-        renderListSafe($ul("team-qa"), qa);
-
-        $("#raw").textContent = JSON.stringify(data, null, 2);
-      }catch(e){
-        log("[load] " + (e.code||e.message), "err");
+      let current="dev";
+      const tabs=document.querySelectorAll(".tab");
+      tabs.forEach(t=>t.onclick=()=>{ tabs.forEach(x=>x.classList.remove("active")); t.classList.add("active"); current=t.dataset.team; renderTeam(); });
+      function renderTeam(){
+        const completed=$("#team-completed"), planned=$("#team-planned"), tiss=$("#team-issues");
+        [completed,planned,tiss].forEach(clear);
+        const t = data.teams?.[current] || {completed:[],planned:[],issues:[]};
+        (t.completed||[]).forEach(x=>add(completed, x));
+        (t.planned||[]).forEach(x=>add(planned, x));
+        (t.issues||[]).forEach(x=>add(tiss, x));
       }
-    }
+      renderTeam();
 
-    main();
-  </script>
+      setStatus("연결 성공 (읽기 전용)","ok");
+    }catch(e){ setStatus("로드 실패: "+(e.code||e.message),"err"); }
+  }
+
+  main();
+</script>
 </body>
 </html>
